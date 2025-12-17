@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
 import plotly.graph_objects as go
+<<<<<<< HEAD
 from typing import Tuple, Any, Dict, List
 import logging
 import time
@@ -21,11 +22,20 @@ logger = logging.getLogger(__name__)
 
 class CodeExecutor:
     """Safely executes Python/Pandas code with enhanced security and monitoring"""
+=======
+from typing import Tuple, Any
+import logging
+
+logger = logging.getLogger(__name__)
+class CodeExecutor:
+    """Safely executes Python/Pandas code for data analysis"""
+>>>>>>> b161ff043a0535b4a953740da79412d61fd73b8a
     
     def __init__(self, data: pd.DataFrame, output_dir: str):
         self.data = data
         self.output_dir = output_dir
         self.execution_count = 0
+<<<<<<< HEAD
         self.execution_history = []
         
         # Set visualization styles
@@ -126,6 +136,18 @@ class CodeExecutor:
     def _prepare_execution_environment(self) -> Dict:
         """Prepare a secure execution environment with necessary imports"""
         return {
+=======
+    
+    def execute(self, code: str) -> Tuple[bool, str, Any, str]:
+        """
+        Execute Python code and return results
+        Returns: (success, output, result, plot_filename)
+        """
+        self.execution_count += 1
+        
+        # Prepare execution environment
+        local_vars = {
+>>>>>>> b161ff043a0535b4a953740da79412d61fd73b8a
             'pd': pd,
             'np': np,
             'plt': plt,
@@ -133,6 +155,7 @@ class CodeExecutor:
             'px': px,
             'go': go,
             'df': self.data.copy(),
+<<<<<<< HEAD
             'data': self.data.copy(),
             'datetime': datetime,
             're': re,
@@ -337,3 +360,60 @@ class CodeExecutor:
     def get_execution_history(self, limit: int = 10) -> List[Dict]:
         """Get recent execution history"""
         return self.execution_history[-limit:]
+=======
+            'data': self.data.copy()
+        }
+        
+        # Capture output
+        stdout_capture = io.StringIO()
+        stderr_capture = io.StringIO()
+        plot_filename = None
+        
+        try:
+            with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
+                # Execute code
+                exec(code, local_vars)
+                
+                # Save any matplotlib figures
+                if plt.get_fignums():
+                    plot_filename = f"plot_{self.execution_count}.png"
+                    plot_path = f"{self.output_dir}/{plot_filename}"
+                    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+                    plt.close('all')
+                    logger.info(f"Saved plot to {plot_path}")
+            
+            output = stdout_capture.getvalue()
+            result = local_vars.get('result', None)
+            
+            logger.info(f"Code execution #{self.execution_count} successful")
+            return True, output, result, plot_filename
+            
+        except Exception as e:
+            error_msg = f"Error: {str(e)}\n{traceback.format_exc()}"
+            logger.error(f"Code execution #{self.execution_count} failed: {error_msg}")
+            return False, error_msg, None, None
+    
+    def validate_code(self, code: str) -> Tuple[bool, str]:
+        """Validate code before execution"""
+        dangerous_patterns = [
+            'import os',
+            'import sys',
+            'import subprocess',
+            '__import__',
+            'eval(',
+            'exec(',
+            'open(',
+            'file(',
+            'input(',
+            'raw_input(',
+            'compile(',
+            '__builtins__'
+        ]
+        
+        code_lower = code.lower()
+        for pattern in dangerous_patterns:
+            if pattern in code_lower:
+                return False, f"Dangerous operation detected: {pattern}"
+        
+        return True, "Code validation passed"
+>>>>>>> b161ff043a0535b4a953740da79412d61fd73b8a
