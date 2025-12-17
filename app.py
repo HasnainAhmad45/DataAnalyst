@@ -1,10 +1,15 @@
+# Set matplotlib backend BEFORE any other imports
+import matplotlib
+matplotlib.use('Agg')  # Non-interactive backend for servers
+
 from flask import Flask, request, jsonify, send_from_directory
-from main import AutonomousDataAnalyst
-from config import Config
 import os
 import json
 import urllib.parse
 from datetime import datetime
+
+# DON'T import heavy modules at top level
+# from main import AutonomousDataAnalyst  # MOVED THIS
 
 app = Flask(__name__)
 
@@ -20,12 +25,17 @@ app_state = {
 # Directories
 FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "frontend")
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "uploads")
-PLOTS_DIR = getattr(Config, 'PLOTS_DIR', os.path.join(os.path.dirname(__file__), "outputs", "plots"))
+PLOTS_DIR = os.path.join(os.path.dirname(__file__), "outputs", "plots")
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PLOTS_DIR, exist_ok=True)
 
 app.static_folder = 'frontend/static'
+
+def get_analyst():
+    """Lazy load AutonomousDataAnalyst only when needed"""
+    from main import AutonomousDataAnalyst
+    return AutonomousDataAnalyst()
 
 def get_mysql_conn_str():
     """Generate MySQL connection string with proper encoding"""
@@ -128,8 +138,8 @@ def api_upload_csv():
     filepath = os.path.join(UPLOAD_FOLDER, file.filename)
     file.save(filepath)
     
-    # Initialize analyst
-    app_state["analyst"] = AutonomousDataAnalyst()
+    # Initialize analyst with lazy loading
+    app_state["analyst"] = get_analyst()
     
     try:
         # Use intelligent file loading - auto-detects CSV, Excel, JSON, etc.
@@ -160,7 +170,7 @@ def api_upload_csv():
             "success": True, 
             "msg": f"{file_type.upper()} file loaded successfully!", 
             "metadata": app_state["metadata"],
-            "schema_preview": schema_info[:500] if schema_info else None  # First 500 chars
+            "schema_preview": schema_info[:500] if schema_info else None
         })
     except Exception as e:
         app_state["data_loaded"] = False
@@ -180,7 +190,8 @@ def api_load_db():
     table_name = data.get("table_name") or "sales"
     database_type = data.get("database_type", "mysql")
     
-    app_state["analyst"] = AutonomousDataAnalyst()
+    # Initialize analyst with lazy loading
+    app_state["analyst"] = get_analyst()
     
     try:
         # Build connection string based on database type
@@ -247,7 +258,7 @@ def api_sql_query():
     conn_str = get_mysql_conn_str()
     
     if not app_state["analyst"]:
-        app_state["analyst"] = AutonomousDataAnalyst()
+        app_state["analyst"] = get_analyst()
     
     try:
         df = app_state["analyst"].load_data(conn_str, source_type="sql", query=sql)
@@ -379,4 +390,4 @@ def api_clear_plots():
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port, debug=True)
