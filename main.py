@@ -166,12 +166,17 @@ class AutonomousDataAnalyst:
             # Get data profile
             data_profile = self.data_loader.get_data_profile()
             
+            # Get source name for citation
+            source_name = self.data_loader.metadata.get("table_name") or \
+                          os.path.basename(self.data_loader.metadata.get("source", "Unknown Source"))
+            
             # Generate analysis plan and code
             response = self.analyst_agent.analyze_query(
                 query=query,
                 data_context=data_context,
                 retrieved_context=retrieved_context,
-                data_profile=data_profile
+                data_profile=data_profile,
+                source_name=source_name
             )
             
             # Extract code from response
@@ -193,7 +198,8 @@ class AutonomousDataAnalyst:
                 code_blocks[0],
                 query,
                 data_context,
-                max_retries
+                max_retries,
+                source_name=source_name
             )
             
             execution_time = time.time() - analysis_start
@@ -253,7 +259,7 @@ class AutonomousDataAnalyst:
             }
     
     def _execute_with_retry(self, code: str, query: str, 
-                           data_context: str, max_retries: int) -> tuple:
+                           data_context: str, max_retries: int, source_name: str = "Unknown Source") -> tuple:
         """
         Execute code with intelligent retry and self-correction
         
@@ -290,7 +296,8 @@ class AutonomousDataAnalyst:
                         error=f"Validation Error: {validation_msg}",
                         query=query,
                         data_context=data_context,
-                        attempt=attempt
+                        attempt=attempt,
+                        source_name=source_name
                     )
                     
                     corrected_blocks = self.analyst_agent.extract_code(corrected_response)
@@ -328,7 +335,8 @@ class AutonomousDataAnalyst:
                     error=output,
                     query=query,
                     data_context=data_context,
-                    attempt=attempt
+                    attempt=attempt,
+                    source_name=source_name
                 )
                 
                 corrected_blocks = self.analyst_agent.extract_code(corrected_response)

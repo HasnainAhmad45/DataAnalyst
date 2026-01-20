@@ -16,12 +16,12 @@ class AnalystAgent:
         self.analysis_cache = {}
         logger.info(f"Analyst Agent initialized with model: {model}")
     
-    def analyze_query(self, query: str, data_context: str, retrieved_context: List[str],
-                     data_profile: Dict = None) -> str:
-        """Analyze user query with enhanced context and reasoning"""
+    def analyze_query(self, query: str, data_context: str, retrieved_context: List[str], 
+                     data_profile: Dict = None, source_name: str = "Unknown Source") -> str:
+        """Analyze user query and generate analysis plan + code"""
         
         # Build comprehensive context
-        context_str = self._build_context_string(retrieved_context, data_profile)
+        context_str = "\n\n".join(retrieved_context) if retrieved_context else "No specific context retrieved."
         
         # Detect query intent
         query_intent = self._detect_query_intent(query)
@@ -32,7 +32,8 @@ class AnalystAgent:
             data_context=data_context,
             context_str=context_str,
             query_intent=query_intent,
-            data_profile=data_profile
+            data_profile=data_profile,
+            source_name=source_name
         )
         
         try:
@@ -135,10 +136,12 @@ class AnalystAgent:
     
     def _build_specialized_prompt(self, query: str, data_context: str, 
                                  context_str: str, query_intent: Dict,
-                                 data_profile: Dict = None) -> str:
+                                 data_profile: Dict = None, source_name: str = "Unknown Source") -> str:
         """Build specialized prompt based on query intent"""
         
         base_prompt = f"""You are an expert Data Analyst AI working inside a Retrieval-Augmented Generation (RAG) system.
+
+The active data source you are analyzing is: **{source_name}**
 
 Your task is to answer user queries written in natural language by retrieving and analyzing data from:
 1. A structured database (SQL tables)
@@ -147,7 +150,8 @@ Your task is to answer user queries written in natural language by retrieving an
 
 Follow these rules strictly:
 
-1. Understand the user’s question and identify:
+1. **Cite your source**: Always start or end your response by explicitly mentioning that you are using data from '{source_name}'.
+2. Understand the user’s question and identify:
    - Required metrics (count, sum, average, trends, comparison, etc.)
    - Relevant columns, tables, or documents
 
@@ -211,13 +215,20 @@ IMPORTANT: To perform the analysis, you MUST generate executable Python code.
         return cleaned_matches
     
     def self_correct(self, code: str, error: str, query: str, 
-                    data_context: str, attempt: int = 1) -> str:
+                    data_context: str, attempt: int = 1, source_name: str = "Unknown Source") -> str:
         """Generate corrected code with enhanced error analysis"""
         
         # Analyze the error
         error_analysis = self._analyze_error(error)
         
         correction_prompt = f"""You are debugging code that produced an error. Analyze carefully and fix it.
+
+The active data source is: **{source_name}**
+
+Follow these rules:
+1. **Cite your source**: Always mention that you are analyzing data from '{source_name}'.
+2. Provide a clear explanation of what went wrong.
+3. Provide the corrected Python code block.
 
 Original Query: {query}
 
