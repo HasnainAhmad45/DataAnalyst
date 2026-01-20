@@ -190,32 +190,84 @@ const dbModal = document.getElementById('db-modal');
 function showDbModal() { dbModal.classList.add('open'); }
 function closeDbModal() { dbModal.classList.remove('open'); }
 
+function updateDbForm() {
+    const dbType = document.getElementById('db-type').value;
+    const mysqlFields = document.getElementById('mysql-fields');
+    const postgresFields = document.getElementById('postgres-fields');
+
+    if (dbType === 'mysql') {
+        mysqlFields.style.display = 'block';
+        postgresFields.style.display = 'none';
+        // Make MySQL fields required
+        document.getElementById('mysql-host').required = true;
+        document.getElementById('mysql-user').required = true;
+        document.getElementById('mysql-password').required = true;
+        document.getElementById('mysql-database').required = true;
+        document.getElementById('mysql-table').required = true;
+        // Make PostgreSQL fields optional
+        document.getElementById('postgres-url').required = false;
+        document.getElementById('postgres-table').required = false;
+    } else if (dbType === 'postgresql') {
+        mysqlFields.style.display = 'none';
+        postgresFields.style.display = 'block';
+        // Make PostgreSQL fields required
+        document.getElementById('postgres-url').required = true;
+        document.getElementById('postgres-table').required = true;
+        // Make MySQL fields optional
+        document.getElementById('mysql-host').required = false;
+        document.getElementById('mysql-user').required = false;
+        document.getElementById('mysql-password').required = false;
+        document.getElementById('mysql-database').required = false;
+        document.getElementById('mysql-table').required = false;
+    } else {
+        mysqlFields.style.display = 'none';
+        postgresFields.style.display = 'none';
+    }
+}
+
 async function handleDbConnect(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
+    const dbType = data.db_type;
 
     try {
-        const response = await fetch('/api/load_db', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+        let requestBody;
+
+        if (dbType === 'mysql') {
+            requestBody = {
+                db_type: 'mysql',
                 host: data.host,
                 port: data.port,
                 user: data.user,
                 password: data.password,
                 database: data.database,
                 table: data.table
-            })
+            };
+        } else if (dbType === 'postgresql') {
+            requestBody = {
+                db_type: 'postgresql',
+                postgres_url: data.postgres_url,
+                table: data.table
+            };
+        } else {
+            alert('Please select a database type');
+            return;
+        }
+
+        const response = await fetch('/api/load_db', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
         });
         const result = await response.json();
 
         if (result.success) {
             closeDbModal();
-            currentSource = { name: data.table, type: 'sql' };
+            currentSource = { name: data.table, type: dbType };
             updateActiveList();
             switchTab('analysis');
-            appendMessage('ai', `Connected to database table **${data.table}**. Ready!`);
+            appendMessage('ai', `Connected to ${dbType.toUpperCase()} database table **${data.table}**. Ready!`);
         } else {
             alert('Connection Failed: ' + result.msg);
         }

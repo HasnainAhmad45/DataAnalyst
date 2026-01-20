@@ -146,23 +146,30 @@ def api_upload_pdf():
 
 @app.route("/api/load_db", methods=["POST"])
 def api_load_db():
-    """Load data from MySQL database"""
+    """Load data from MySQL or PostgreSQL database"""
     global analyst
     try:
         data = request.get_json() or {}
-        
-        # Get credentials from request body
-        host = data.get("host", "localhost")
-        port = data.get("port", "3306")
-        user = data.get("user", "root")
-        password = data.get("password", "")
-        database = data.get("database", "sales_data")
+        db_type = data.get("db_type", "mysql")
         table_name = data.get("table", "sales")
         
-        # Build connection string WITHOUT URL encoding (user will change password to avoid special chars)
-        conn_str = f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}"
-        
-        logger.info(f"Loading database table: {table_name} from {host}")
+        # Build connection string based on database type
+        if db_type == "postgresql":
+            # PostgreSQL connection using provided URL
+            postgres_url = data.get("postgres_url")
+            if not postgres_url:
+                return jsonify({"success": False, "msg": "PostgreSQL URL is required"}), 400
+            conn_str = postgres_url
+            logger.info(f"Loading PostgreSQL table: {table_name}")
+        else:
+            # MySQL connection (default)
+            host = data.get("host", "localhost")
+            port = data.get("port", "3306")
+            user = data.get("user", "root")
+            password = data.get("password", "")
+            database = data.get("database", "sales_data")
+            conn_str = f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}"
+            logger.info(f"Loading MySQL table: {table_name} from {host}")
         
         analyst = AutonomousDataAnalyst()
         analyst.load_data(conn_str, source_type="sql", table_name=table_name)
@@ -173,7 +180,7 @@ def api_load_db():
         
         return jsonify({
             "success": True,
-            "msg": f"Database table '{table_name}' loaded successfully",
+            "msg": f"{db_type.upper()} table '{table_name}' loaded successfully",
             "shape": analyst.data_loader.metadata.get("shape"),
             "columns": analyst.data_loader.metadata.get("columns"),
             "preview": sample_data
