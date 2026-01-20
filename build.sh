@@ -1,11 +1,11 @@
 #!/bin/bash
 # Render build script
 
-# Upgrade pip
+echo "Installing dependencies..."
 pip install --upgrade pip
+pip install -r requirements.txt --no-cache-dir
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Create necessary directories
+echo "Creating directories..."
 mkdir -p uploads logs outputs/plots
+
+echo "Build complete!"
