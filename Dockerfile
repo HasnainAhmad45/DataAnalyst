@@ -1,17 +1,15 @@
-# Use an official Python runtime as a parent image
-FROM python:3.9-slim
+# Use Python 3.11 (REQUIRED for numpy 2.x & pandas 2.x)
+FROM python:3.11-slim
 
-# Set environment variables
+# Environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV FLASK_APP=app.py
 
-# Set work directory
+# Work directory
 WORKDIR /app
 
-# Install system dependencies
-# gcc and python3-dev are often needed for building python packages like numpy/pandas/chromadb
-# default-libmysqlclient-dev is needed for pymysql/mysqlclient if used (though pymysql is pure python, sometimes dependencies need headers)
+# System dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
@@ -20,6 +18,9 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
+# Upgrade pip first (IMPORTANT)
+RUN pip install --upgrade pip
+
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -27,11 +28,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY . .
 
-# Create necessary directories
+# Create required directories
 RUN mkdir -p uploads logs outputs/plots brain
 
-# Expose port
+# Expose Flask port
 EXPOSE 5000
 
-# Run the application
+# Start application
 CMD ["python", "app.py"]
