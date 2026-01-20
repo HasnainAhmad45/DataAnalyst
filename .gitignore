@@ -135,6 +135,10 @@ flask_session/
 uploads/
 static/uploads/
 
+# Generated outputs and logs
+outputs/
+logs/
+
 # Configuration files with secrets (uncomment if needed)
 # config.py
 # settings.py

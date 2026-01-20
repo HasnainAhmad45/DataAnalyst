@@ -5,6 +5,7 @@ import os
 import json
 import logging
 from datetime import datetime
+from urllib.parse import quote_plus
 
 # Configure logging
 logging.basicConfig(
@@ -33,8 +34,8 @@ for folder in [UPLOAD_FOLDER, LOGS_FOLDER, "outputs/plots"]:
 
 def get_mysql_conn_str():
     """Build MySQL connection string with proper encoding"""
-    user = os.getenv("DB_USER", "root")
-    password = os.getenv("DB_PASSWORD", "Hasnain123%40")
+    user = quote_plus(os.getenv("DB_USER", "root"))
+    password = quote_plus(os.getenv("DB_PASSWORD", "Hasnain123%40"))
     host = os.getenv("DB_HOST", "localhost")
     port = os.getenv("DB_PORT", "3306")
     database = os.getenv("DB_NAME", "sales_data")
@@ -99,16 +100,69 @@ def api_upload_csv():
         logger.error(f"Error uploading CSV: {str(e)}", exc_info=True)
         return jsonify({"success": False, "msg": f"Error: {str(e)}"}), 500
 
+@app.route("/api/upload_pdf", methods=["POST"])
+def api_upload_pdf():
+    """Upload and process PDF file"""
+    global analyst
+    try:
+        if 'file' not in request.files:
+            return jsonify({"success": False, "msg": "No file part in request"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"success": False, "msg": "No file selected"}), 400
+        
+        # Validate file extension
+        if not file.filename.lower().endswith('.pdf'):
+            return jsonify({"success": False, "msg": "Only PDF files are supported"}), 400
+        
+        # Save file with timestamp to avoid conflicts
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        safe_filename = f"{timestamp}_{file.filename}"
+        filepath = os.path.join(UPLOAD_FOLDER, safe_filename)
+        file.save(filepath)
+        
+        logger.info(f"PDF file uploaded: {safe_filename}")
+        
+        # Initialize analyst
+        analyst = AutonomousDataAnalyst()
+        
+        # Load PDF text
+        text_chunks = analyst.data_loader.load_pdf(filepath)
+        
+        # Index in RAG
+        analyst.rag_system.index_pdf_content(text_chunks, safe_filename)
+        
+        return jsonify({
+            "success": True,
+            "msg": "PDF uploaded and indexed successfully",
+            "filename": safe_filename,
+            "pages": len(text_chunks)
+        })
+    
+    except Exception as e:
+        logger.error(f"Error uploading PDF: {str(e)}", exc_info=True)
+        return jsonify({"success": False, "msg": f"Error: {str(e)}"}), 500
+
 @app.route("/api/load_db", methods=["POST"])
 def api_load_db():
     """Load data from MySQL database"""
     global analyst
     try:
-        conn_str = get_mysql_conn_str()
         data = request.get_json() or {}
-        table_name = data.get("table_name", "sales")
         
-        logger.info(f"Loading database table: {table_name}")
+        # Get credentials from request body
+        host = data.get("host", "localhost")
+        port = data.get("port", "3306")
+        user = data.get("user", "root")
+        password = data.get("password", "")
+        database = data.get("database", "sales_data")
+        table_name = data.get("table", "sales")
+        
+        # Build connection string WITHOUT URL encoding (user will change password to avoid special chars)
+        conn_str = f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}"
+        
+        logger.info(f"Loading database table: {table_name} from {host}")
         
         analyst = AutonomousDataAnalyst()
         analyst.load_data(conn_str, source_type="sql", table_name=table_name)

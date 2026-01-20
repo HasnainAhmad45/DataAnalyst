@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  analyst-app:
+    build: .
+    container_name: analyst-app
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=sales-db
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
+      - DB_NAME=sales_data
+      - DB_PORT=3306
+    depends_on:
+      - sales-db
+    volumes:
+      - ./uploads:/app/uploads
+      - ./outputs:/app/outputs
+      - ./brain:/app/brain
+      - ./logs:/app/logs
+
+  sales-db:
+    image: mysql:8.0
+    container_name: analyst-db
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=sales_data
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:

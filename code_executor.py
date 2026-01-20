@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
 import plotly.graph_objects as go
-from typing import Tuple, Any, Dict, List
+from typing import Tuple, Any, Dict, List, Optional
 import logging
 import time
 import ast
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class CodeExecutor:
     """Safely executes Python/Pandas code with enhanced security and monitoring"""
     
-    def __init__(self, data: pd.DataFrame, output_dir: str):
+    def __init__(self, data: Optional[pd.DataFrame], output_dir: str):
         self.data = data
         self.output_dir = output_dir
         self.execution_count = 0
@@ -33,7 +33,8 @@ class CodeExecutor:
         plt.rcParams['figure.figsize'] = (12, 6)
         plt.rcParams['font.size'] = 10
         
-        logger.info(f"CodeExecutor initialized with data shape: {data.shape}")
+        shape_info = data.shape if data is not None else "None"
+        logger.info(f"CodeExecutor initialized with data shape: {shape_info}")
     
     def execute(self, code: str, timeout: int = 30) -> Tuple[bool, str, Any, str]:
         """
@@ -132,8 +133,9 @@ class CodeExecutor:
             'sns': sns,
             'px': px,
             'go': go,
-            'df': self.data.copy(),
-            'data': self.data.copy(),
+            'go': go,
+            'df': self.data.copy() if self.data is not None else pd.DataFrame(),
+            'data': self.data.copy() if self.data is not None else pd.DataFrame(),
             'datetime': datetime,
             're': re,
             # Add safe utility functions
@@ -251,7 +253,8 @@ class CodeExecutor:
         
         # Handle dictionaries
         elif isinstance(result, dict):
-            return {k: self._serialize_result(v) for k, v in list(result.items())[:100]}
+            # Convert keys to string to handle Period objects or other non-string keys
+            return {str(k): self._serialize_result(v) for k, v in list(result.items())[:100]}
         
         # Handle lists
         elif isinstance(result, list):

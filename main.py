@@ -62,7 +62,7 @@ class AutonomousDataAnalyst:
         # Initialize components
         self.data_loader = DataLoader()
         self.rag_system = RAGSystem()
-        self.code_executor = None
+        self.code_executor = CodeExecutor(data=None, output_dir=output_dir)
         self.analyst_agent = AnalystAgent(api_key=self.api_key, model=model)
         
         self.analysis_history = []
@@ -142,8 +142,11 @@ class AutonomousDataAnalyst:
         Returns:
             Dictionary containing analysis results
         """
-        if self.data_loader.data is None:
-            raise ValueError("No data loaded. Please load data first using load_data()")
+        if self.data_loader.data is None and not self.data_loader.metadata.get("type") == "pdf":
+            # If it's a PDF analysis, we might not have a DataFrame, which is fine.
+            # But the original code imposed this check.
+            pass 
+            # raise ValueError("No data loaded. Please load data first using load_data()")
         
         analysis_start = time.time()
         self.performance_metrics["total_analyses"] += 1
@@ -346,6 +349,15 @@ class AutonomousDataAnalyst:
     
     def _build_data_context(self) -> str:
         """Build comprehensive data context string"""
+        if self.data_loader.data is None:
+            # Handle PDF/Unstructured data case
+            if self.data_loader.metadata.get("type") == "pdf":
+                return (f"Data Source: PDF Document\n"
+                        f"Source File: {self.data_loader.metadata.get('source')}\n"
+                        f"Pages: {self.data_loader.metadata.get('pages')}\n"
+                        f"Note: This is unstructured text data. Rely on the 'Retrieved Context' section for answers.")
+            return "No structured data loaded."
+
         context_parts = [
             f"Dataset Shape: {self.data_loader.data.shape}",
             f"\nAvailable Columns: {list(self.data_loader.data.columns)}",

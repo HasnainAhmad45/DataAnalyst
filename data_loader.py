@@ -1,7 +1,11 @@
 import pandas as pd
 from sqlalchemy import create_engine, inspect
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union
 import logging
+import numpy as np
+from datetime import datetime
+import warnings
+from pypdf import PdfReader
 import numpy as np
 from datetime import datetime
 import warnings
@@ -147,7 +151,36 @@ class DataLoader:
         except Exception as e:
             logger.error(f"Error loading SQL data: {str(e)}", exc_info=True)
             raise
+        except Exception as e:
+            logger.error(f"Error loading SQL data: {str(e)}", exc_info=True)
+            raise
     
+    def load_pdf(self, filepath: str) -> List[str]:
+        """Load text from PDF file"""
+        try:
+            logger.info(f"Loading PDF file: {filepath}")
+            reader = PdfReader(filepath)
+            text_chunks = []
+            
+            for i, page in enumerate(reader.pages):
+                text = page.extract_text()
+                if text.strip():
+                    text_chunks.append(f"Page {i+1}:\n{text}")
+            
+            self.metadata = {
+                "source": filepath,
+                "type": "pdf",
+                "pages": len(reader.pages),
+                "loaded_at": datetime.now().isoformat()
+            }
+            
+            logger.info(f"PDF loaded successfully: {len(text_chunks)} pages extracted")
+            return text_chunks
+            
+        except Exception as e:
+            logger.error(f"Error loading PDF: {str(e)}", exc_info=True)
+            raise
+
     def _auto_detect_dates(self) -> List[str]:
         """Intelligently detect and parse date columns"""
         date_columns = []
@@ -240,8 +273,9 @@ class DataLoader:
                         self.data[col] = self.data[col].astype(np.int32)
             
             # Optimize floats
-            elif pd.api.types.is_float_dtype(col_type):
-                self.data[col] = self.data[col].astype(np.float32)
+            # Skipped float32 conversion to maintain precision for financial/analytical accuracy
+            # elif pd.api.types.is_float_dtype(col_type):
+            #     self.data[col] = self.data[col].astype(np.float32)
             
             # Convert low-cardinality strings to category
             elif col_type == 'object':
@@ -320,7 +354,7 @@ class DataLoader:
                 value_counts = self.data[col].value_counts()
                 profile["summary_stats"][col] = {
                     "unique_values": int(self.data[col].nunique()),
-                    "top_values": value_counts.head(5).to_dict(),
+                    "top_values": {str(k): v for k, v in value_counts.head(5).to_dict().items()},
                     "mode": str(self.data[col].mode()[0]) if len(self.data[col].mode()) > 0 else None
                 }
             

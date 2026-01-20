@@ -1,116 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Autonomous Data Analyst</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css" />
+    <!-- Marked for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
+
 <body>
-    <div class="app-wrapper">
-        <div class="container">
-            <header class="header">
-                <h1><span class="icon">📊</span> Autonomous Data Analyst</h1>
-                <p class="subtitle">AI-Powered Data Analysis Platform</p>
-            </header>
-            
-            <div class="card">
-                <div id="choose-method" class="method-selector">
-                    <button class="method-btn active" onclick="showCsvUpload()">
-                        <span class="btn-icon">📁</span>
-                        <span>Upload CSV</span>
-                    </button>
-                    <button class="method-btn" onclick="showDbForm()">
-                        <span class="btn-icon">🗄️</span>
-                        <span>Connect Database</span>
-                    </button>
-                </div>
-                
-                <form id="csvForm" class="form-card" style="display:none" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <label for="csvfile" class="form-label">
-                            <span class="label-icon">📄</span>
-                            Select CSV File
-                        </label>
-                        <input type="file" id="csvfile" name="csvfile" accept=".csv" class="file-input" required />
-                    </div>
-                    <button type="submit" class="btn-primary">
-                        <span>Upload & Load</span>
-                        <span class="btn-arrow">→</span>
-                    </button>
-                </form>
-                
-                <form id="dbForm" class="form-card" style="display:none">
-                    <div class="form-group">
-                        <label class="form-label">
-                            <span class="label-icon">🌐</span>
-                            Host
-                        </label>
-                        <input type="text" id="dbhost" class="form-input" required placeholder="localhost" />
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">
-                                <span class="label-icon">🔌</span>
-                                Port
-                            </label>
-                            <input type="number" id="dbport" class="form-input" value="3306" required />
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">
-                                <span class="label-icon">👤</span>
-                                User
-                            </label>
-                            <input type="text" id="dbuser" class="form-input" required placeholder="root" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">
-                            <span class="label-icon">🔒</span>
-                            Password
-                        </label>
-                        <input type="password" id="dbpass" class="form-input" required />
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">
-                            <span class="label-icon">💾</span>
-                            Database
-                        </label>
-                        <input type="text" id="dbname" class="form-input" required />
-                    </div>
-                    <button type="submit" class="btn-primary">
-                        <span>Connect & Load</span>
-                        <span class="btn-arrow">→</span>
-                    </button>
-                </form>
-                
-                <form id="queryForm" class="form-card" style="display:none">
-                    <div class="form-group">
-                        <label for="query" class="form-label">
-                            <span class="label-icon">💬</span>
-                            Analysis Query
-                        </label>
-                        <input type="text" id="query" class="form-input query-input" placeholder="e.g., Show me sales for Mouse in 2024" required />
-                    </div>
-                    <button type="submit" class="btn-primary btn-analyze">
-                        <span>🚀 Run Analysis</span>
-                    </button>
-                </form>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar glass-panel">
+            <div class="logo-area">
+                <div class="logo-icon">📊</div>
+                <h1>Data Analyst</h1>
             </div>
-            
-            <div id="status" class="status-bar"></div>
-            
-            <div id="output-container" class="output-card" style="display:none">
-                <div class="output-header">
-                    <h2>📈 Analysis Results</h2>
-                </div>
-                <div class="output-content">
-                    <pre id="analysisResult"></pre>
-                    <img id="plotImg" class="plot-image" style="display:none;" />
+
+            <nav class="nav-menu">
+                <button class="nav-btn active" onclick="switchTab('analysis')">
+                    <i class="fa-solid fa-message"></i> Analysis
+                </button>
+                <button class="nav-btn" onclick="switchTab('sources')">
+                    <i class="fa-solid fa-database"></i> Data Sources
+                </button>
+                <button class="nav-btn" onclick="switchTab('settings')">
+                    <i class="fa-solid fa-gear"></i> Settings
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span id="system-status">System Ready</span>
                 </div>
             </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- Analysis View (Chat) -->
+            <div id="view-analysis" class="view-section active">
+                <div class="chat-container glass-panel">
+                    <div class="chat-header">
+                        <div class="model-info">
+                            <i class="fa-solid fa-robot"></i>
+                            <span>AI Analyst Agent</span>
+                        </div>
+                        <button class="clear-chat-btn" onclick="clearChat()">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+
+                    <div id="chat-history" class="chat-history">
+                        <!-- Welcome Message -->
+                        <div class="message ai-message">
+                            <div class="avatar">🤖</div>
+                            <div class="message-content">
+                                <p>Hello! I'm your Autonomous Data Analyst. Connect a data source to get started, or ask
+                                    me questions about your loaded data.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chat-input-area">
+                        <form id="chat-form" onsubmit="handleChatSubmit(event)">
+                            <div class="input-wrapper glass-panel">
+                                <input type="text" id="user-input" placeholder="Ask a question about your data..."
+                                    autocomplete="off">
+                                <button type="submit" id="send-btn">
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Sources View -->
+            <div id="view-sources" class="view-section" style="display: none;">
+                <div class="sources-container">
+                    <h2 class="section-title">Manage Data Sources</h2>
+
+                    <div class="upload-grid">
+                        <!-- File Upload Card -->
+                        <div class="source-card glass-panel">
+                            <div class="card-icon"><i class="fa-solid fa-file-arrow-up"></i></div>
+                            <h3>File Upload</h3>
+                            <p>Support for .CSV and .PDF</p>
+
+                            <div class="drop-zone" id="drop-zone">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                <p>Drag & Drop files here</p>
+                                <span>or</span>
+                                <input type="file" id="file-input" hidden accept=".csv,.pdf">
+                                <button class="btn-secondary"
+                                    onclick="document.getElementById('file-input').click()">Browse Files</button>
+                            </div>
+                            <div id="upload-status"></div>
+                        </div>
+
+                        <!-- Database Card -->
+                        <div class="source-card glass-panel">
+                            <div class="card-icon"><i class="fa-solid fa-server"></i></div>
+                            <h3>Database Connection</h3>
+                            <p>Connect to MySQL Database</p>
+                            <button class="btn-primary" onclick="showDbModal()">Connect</button>
+                        </div>
+                    </div>
+
+                    <!-- Active Sources List -->
+                    <div class="active-sources glass-panel">
+                        <h3><i class="fa-solid fa-link"></i> Active Data</h3>
+                        <div id="active-data-list">
+                            <div class="empty-state">No data loaded</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings View -->
+            <div id="view-settings" class="view-section" style="display: none;">
+                <div class="settings-container glass-panel">
+                    <h2>Settings</h2>
+                    <div class="setting-item">
+                        <label>Theme</label>
+                        <select class="glass-input">
+                            <option>Dark (Default)</option>
+                            <option>Light</option>
+                        </select>
+                    </div>
+                    <!-- Add more settings as needed -->
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- DB Modal -->
+    <div id="db-modal" class="modal">
+        <div class="modal-content glass-panel">
+            <span class="close-modal" onclick="closeDbModal()">&times;</span>
+            <h2>Connect to Database</h2>
+            <form id="db-connect-form" onsubmit="handleDbConnect(event)">
+                <div class="form-group">
+                    <label>Host</label>
+                    <input type="text" name="host" value="localhost" class="glass-input" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Port</label>
+                        <input type="number" name="port" value="3306" class="glass-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>User</label>
+                        <input type="text" name="user" value="root" class="glass-input" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" class="glass-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Database Name</label>
+                    <input type="text" name="database" class="glass-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Table Name</label>
+                    <input type="text" name="table" class="glass-input" required>
+                </div>
+                <button type="submit" class="btn-primary full-width">Connect</button>
+            </form>
         </div>
     </div>
+
     <script src="/static/app.js"></script>
 </body>
+
 </html>

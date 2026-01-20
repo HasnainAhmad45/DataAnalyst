@@ -244,6 +244,39 @@ Always include: title, axis labels, legend (if needed), appropriate colors""")
             logger.error(f"Error indexing data context: {e}")
             raise
     
+    def index_pdf_content(self, text_chunks: List[str], source_name: str):
+        """Index PDF content chunks"""
+        try:
+            # Delete existing collection if starting fresh (optional, maybe keep?)
+            # For now, we'll append or overwrite depending on design. 
+            # Let's clean up for this single-session agent.
+            try:
+                self.chroma_client.delete_collection(self.collection_name)
+            except:
+                pass
+                
+            self.collection = self.chroma_client.create_collection(
+                name=self.collection_name,
+                metadata={"description": "PDF Content Context"}
+            )
+            
+            # Create embeddings
+            embeddings = self.create_embeddings(text_chunks)
+            
+            # Add to collection
+            self.collection.add(
+                documents=text_chunks,
+                embeddings=embeddings,
+                ids=[f"pdf_page_{i}" for i in range(len(text_chunks))],
+                metadatas=[{"source": source_name, "page": i+1, "type": "pdf_content"} for i in range(len(text_chunks))]
+            )
+            
+            logger.info(f"Indexed {len(text_chunks)} PDF pages from {source_name}")
+            
+        except Exception as e:
+            logger.error(f"Error indexing PDF content: {e}")
+            raise
+    
     def retrieve_context(self, query: str, top_k: int = 4) -> List[str]:
         """Retrieve relevant context with intelligent ranking"""
         try:
