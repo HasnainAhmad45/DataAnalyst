@@ -32,15 +32,6 @@ LOGS_FOLDER = os.path.join(os.path.dirname(__file__), "logs")
 for folder in [UPLOAD_FOLDER, LOGS_FOLDER, "outputs/plots"]:
     os.makedirs(folder, exist_ok=True)
 
-def get_mysql_conn_str():
-    """Build MySQL connection string with proper encoding"""
-    user = quote_plus(os.getenv("DB_USER", "root"))
-    password = quote_plus(os.getenv("DB_PASSWORD", "Hasnain123%40"))
-    host = os.getenv("DB_HOST", "localhost")
-    port = os.getenv("DB_PORT", "3306")
-    database = os.getenv("DB_NAME", "sales_data")
-    return f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}"
-
 @app.route("/")
 def index():
     """Serve the main frontend page"""

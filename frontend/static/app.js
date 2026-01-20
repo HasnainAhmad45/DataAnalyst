@@ -231,6 +231,12 @@ async function handleDbConnect(e) {
     const data = Object.fromEntries(formData.entries());
     const dbType = data.db_type;
 
+    // Loading State
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch spinner"></i> Connecting...';
+
     try {
         let requestBody;
 
@@ -273,6 +279,9 @@ async function handleDbConnect(e) {
         }
     } catch (err) {
         alert('Error: ' + err.message);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
     }
 }
 
