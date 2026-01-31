@@ -22,6 +22,26 @@ function switchTab(tabName) {
     if (btnIndex >= 0) {
         document.querySelectorAll('.nav-btn')[btnIndex].classList.add('active');
     }
+
+    // Close mobile menu when switching tabs
+    closeMobileMenu();
+}
+
+// --- Mobile Menu Functions ---
+function toggleMobileMenu() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    sidebar.classList.toggle('mobile-open');
+    overlay.classList.toggle('active');
+}
+
+function closeMobileMenu() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    sidebar.classList.remove('mobile-open');
+    overlay.classList.remove('active');
 }
 
 // --- Chat Functions ---

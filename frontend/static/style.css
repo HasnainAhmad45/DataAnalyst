@@ -111,6 +111,42 @@ body {
     width: 20px;
 }
 
+.sidebar-footer {
+    margin-top: auto;
+    padding-top: 20px;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
 /* Glass Panel Utility */
 .glass-panel {
     background: var(--glass-bg);
@@ -525,5 +561,439 @@ body {
 
     100% {
         transform: rotate(360deg);
+    }
+}
+
+/* ============================================
+   RESPONSIVE DESIGN - Mobile First Approach
+   ============================================ */
+
+/* Mobile Menu Toggle Button */
+.mobile-menu-toggle {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+    background: var(--accent-gradient);
+    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    transition: transform 0.2s;
+}
+
+.mobile-menu-toggle:active {
+    transform: scale(0.95);
+}
+
+/* Sidebar Overlay for Mobile */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+    backdrop-filter: blur(3px);
+}
+
+.sidebar-overlay.active {
+    display: block;
+}
+
+/* ============================================
+   TABLET & BELOW (< 1024px)
+   ============================================ */
+@media (max-width: 1024px) {
+
+    /* Show mobile menu toggle */
+    .mobile-menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Sidebar becomes overlay on tablet/mobile */
+    .sidebar {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        width: 260px;
+        height: 100vh;
+        z-index: 100;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .sidebar.mobile-open {
+        left: 0;
+    }
+
+    /* Main content takes full width */
+    .main-content {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    /* Adjust view section padding */
+    .view-section {
+        padding: 80px 15px 15px;
+    }
+
+    /* Chat messages take more width on tablet */
+    .message {
+        max-width: 90%;
+    }
+
+    /* Modal adjustments */
+    .modal-content {
+        width: 90%;
+        max-width: 450px;
+        margin: 0 20px;
+    }
+
+    /* Sources grid becomes single column on smaller tablets */
+    .upload-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Settings container */
+    .settings-container {
+        padding: 20px;
+    }
+}
+
+/* ============================================
+   MOBILE LANDSCAPE & SMALL TABLETS (< 768px)
+   ============================================ */
+@media (max-width: 768px) {
+
+    /* Reduce font sizes for better mobile readability */
+    body {
+        font-size: 14px;
+    }
+
+    .section-title {
+        font-size: 20px;
+        margin-bottom: 20px;
+    }
+
+    /* Chat adjustments */
+    .chat-header {
+        padding: 12px 16px;
+    }
+
+    .model-info {
+        font-size: 14px;
+    }
+
+    .chat-history {
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .message {
+        max-width: 95%;
+    }
+
+    .message-content {
+        padding: 12px 14px;
+        font-size: 14px;
+    }
+
+    .avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+
+    /* Chat input */
+    .chat-input-area {
+        padding: 12px 16px;
+    }
+
+    .input-wrapper {
+        padding: 8px;
+    }
+
+    .input-wrapper input {
+        font-size: 14px;
+        padding: 6px 12px;
+    }
+
+    #send-btn {
+        width: 36px;
+        height: 36px;
+    }
+
+    /* Source cards */
+    .source-card {
+        padding: 20px;
+    }
+
+    .card-icon {
+        font-size: 32px;
+        margin-bottom: 12px;
+    }
+
+    .drop-zone {
+        padding: 16px;
+        margin: 16px 0;
+    }
+
+    /* Form adjustments */
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    /* Plot containers */
+    .plot-container img,
+    .plot-container iframe {
+        max-width: 100%;
+    }
+
+    /* Active sources */
+    .active-sources {
+        padding: 16px;
+    }
+
+    .source-item {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+}
+
+/* ============================================
+   MOBILE PORTRAIT (< 480px)
+   ============================================ */
+@media (max-width: 480px) {
+
+    /* Further reduce spacing and sizes */
+    .view-section {
+        padding: 70px 10px 10px;
+    }
+
+    .logo-area h1 {
+        font-size: 16px;
+    }
+
+    .nav-btn {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    .section-title {
+        font-size: 18px;
+        margin-bottom: 16px;
+    }
+
+    /* Chat messages full width on small phones */
+    .message {
+        max-width: 100%;
+    }
+
+    .message-content {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    /* Compact chat header */
+    .chat-header {
+        padding: 10px 12px;
+    }
+
+    .model-info span {
+        display: none;
+    }
+
+    .model-info i {
+        font-size: 18px;
+    }
+
+    /* Input adjustments */
+    .input-wrapper input {
+        font-size: 13px;
+    }
+
+    #send-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+
+    /* Modal full screen on very small devices */
+    .modal-content {
+        width: 95%;
+        padding: 20px;
+        margin: 0 10px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .close-modal {
+        top: 10px;
+        right: 15px;
+        font-size: 20px;
+    }
+
+    /* Buttons */
+    .btn-primary,
+    .btn-secondary {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+
+    /* Source cards */
+    .source-card {
+        padding: 16px;
+    }
+
+    .source-card h3 {
+        font-size: 16px;
+    }
+
+    .source-card p {
+        font-size: 13px;
+    }
+
+    /* Drop zone */
+    .drop-zone {
+        padding: 12px;
+    }
+
+    .drop-zone i {
+        font-size: 24px;
+    }
+
+    .drop-zone p {
+        font-size: 13px;
+    }
+
+    /* Settings */
+    .settings-container {
+        padding: 16px;
+    }
+
+    .settings-container h2 {
+        font-size: 18px;
+    }
+
+    .glass-input {
+        padding: 8px;
+        font-size: 14px;
+    }
+}
+
+/* ============================================
+   LARGE SCREENS (> 1440px)
+   ============================================ */
+@media (min-width: 1441px) {
+
+    /* Optimize for larger screens */
+    .sidebar {
+        width: 280px;
+    }
+
+    .sources-container {
+        max-width: 1200px;
+    }
+
+    .upload-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+    }
+
+    .message {
+        max-width: 75%;
+    }
+
+    .chat-history {
+        padding: 32px;
+    }
+
+    .section-title {
+        font-size: 28px;
+    }
+}
+
+/* ============================================
+   EXTRA LARGE SCREENS (> 1920px)
+   ============================================ */
+@media (min-width: 1921px) {
+    .sidebar {
+        width: 300px;
+    }
+
+    .sources-container {
+        max-width: 1400px;
+    }
+
+    .message {
+        max-width: 65%;
+    }
+
+    .message-content {
+        font-size: 16px;
+    }
+}
+
+/* ============================================
+   LANDSCAPE ORIENTATION SPECIFIC
+   ============================================ */
+@media (max-height: 600px) and (orientation: landscape) {
+
+    /* Optimize for landscape mobile */
+    .view-section {
+        padding: 60px 15px 10px;
+    }
+
+    .chat-history {
+        padding: 12px;
+    }
+
+    .sidebar {
+        padding: 15px;
+    }
+
+    .logo-area {
+        margin-bottom: 20px;
+    }
+
+    .nav-btn {
+        padding: 8px 12px;
+    }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+@media print {
+
+    .sidebar,
+    .chat-input-area,
+    .chat-header,
+    .mobile-menu-toggle {
+        display: none;
+    }
+
+    .main-content {
+        width: 100%;
+    }
+
+    .chat-history {
+        overflow: visible;
+    }
+
+    body {
+        background: white;
+        color: black;
     }
 }
